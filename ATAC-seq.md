@@ -12,7 +12,7 @@ ATAC-seq (Assay for Transposase-Accessible Chromatin with high-throughput sequen
 
 <img src="overview.png" alt="ATAC-seq" width="600" />
 
-Figure 1.  ATAC-seq overview ([Buenrostro *et al.*, 2015](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/)).
+**Figure 1.**  ATAC-seq overview ([Buenrostro *et al.*, 2015](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/)).
 
 
 ## Experimental design
@@ -109,7 +109,7 @@ NGmerge is based on the principle that, with paired-end sequencing, adapter cont
 
 <img src="adapter_removal.png" alt="Adapter removal" width="300" />
 
-Figure 2.  The original DNA fragment contains sequencing adapters on both ends (gray boxes).  Because the fragment is short, the paired-end reads (R1, R2) extend into the sequencing adapters.  NGmerge aligns the reads, and clips the 3’ overhangs.
+**Figure 2.**  The original DNA fragment contains sequencing adapters on both ends (gray boxes).  Because the fragment is short, the paired-end reads (R1, R2) extend into the sequencing adapters.  NGmerge aligns the reads, and clips the 3’ overhangs.
 
 
 NGmerge is available on Odyssey:
@@ -120,10 +120,10 @@ Of the many arguments available, here are the most important ones for this appli
 
 | Argument   | Description                                  |
 |------------|----------------------------------------------|
-| `-a`       | adapter-removal mode (**must** be specified) |
-| `-e <int>` | minimum length of overlap, i.e. the minimum DNA fragment length (default 50bp) |
-| `-n <int>` | number of cores on which to run              |
-| `-v`       | verbose mode                                 |
+| `-a`       | Adapter-removal mode (**must** be specified) |
+| `-e <int>` | Minimum length of overlap, i.e. the minimum DNA fragment length (default 50bp) |
+| `-n <int>` | Number of cores on which to run              |
+| `-v`       | Verbose mode                                 |
 
 
 ## Alignment
@@ -143,12 +143,32 @@ For many model organisms, the genome and pre-built reference indexes are availab
 
 Once the indexes are built, the reads can be aligned using Bowtie2.  A brief look at the [manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) reveals the large number of parameters and options available with Bowtie2.  Here are a few that may benefit alignment of an ATAC-seq dataset on Odyssey:
 
+<table>
+  <tr>
+    <th>Argument</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>-X &lt;int&gt;</code></td>
+    <td>Maximum DNA fragment length (default 500bp).  If you anticipate that you may have DNA fragments longer than the default value, you should increase this parameter accordingly.</td>
+  </tr>
+  <tr>
+    <td><code>--very-sensitive</code></td>
+    <td>Bowtie2 has a number of alignment and effort parameters that interact in complex (and sometimes unexpected) ways.  Preset collections of these parameters are provided for convenience; the default is <code>--sensitive</code>, but better alignment results are frequently achieved with <code>--very-sensitive</code>.</td>
+  </tr>
+  <tr>
+    <td><code>-p &lt;int&gt;</code></td>
+    <td>Number of cores on which to run</td>
+  </tr>
+</table>
+
+<!---
 | Argument           | Description                                  |
 |--------------------|----------------------------------------------|
 | `-X <int>`         | maximum DNA fragment length (default 500bp).  If you anticipate that you may have DNA fragments longer than the default value, you should increase this parameter accordingly. |
 | `--very-sensitive` | Bowtie2 has a number of alignment and effort parameters that interact in complex (and sometimes unexpected) ways.  Preset collections of these parameters are provided for convenience; the default is `--sensitive`, but better alignment results are frequently achieved with `--very-sensitive`. |
 | `-p <int>`         | number of cores on which to run              |
-
+--->
 
 The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), which contains various alignment information for each input read.  The SAM can be compressed to a binary format (BAM) with [SAMtools](http://www.htslib.org/doc/samtools.html).  This is best accomplished by piping the output from Bowtie2 directly to `samtools view`, e.g.:
 
@@ -189,7 +209,7 @@ With paired-end sequencing, the types of alignments that are produced fall into 
 
 <img src="alignments.png" alt="Alignment types" width="700" />
 
-Figure 3. Paired-end alignment possibilities.  A: “Properly paired” alignments.  Reads that are properly paired align in opposite orientations on the same reference sequence (chromosome).  The reads may overlap to some extent (bottom).  B: “Singleton” alignments.  A read can be not properly paired for several reasons: if its mate is unaligned (upper left), aligns to a different chromosome (upper right), aligns in the incorrect orientation (middle cases), or aligns in the correct orientation but at an invalid distance (bottom).
+**Figure 3.** Paired-end alignment possibilities.  A: “Properly paired” alignments.  Reads that are properly paired align in opposite orientations on the same reference sequence (chromosome).  The reads may overlap to some extent (bottom).  B: “Singleton” alignments.  A read can be not properly paired for several reasons: if its mate is unaligned (upper left), aligns to a different chromosome (upper right), aligns in the incorrect orientation (middle cases), or aligns in the correct orientation but at an invalid distance (bottom).
 
 
 An important consideration with MACS2 is deciding which types of alignments should be analyzed and how those alignments should be interpreted.  The analysis mode is set by the `-f` argument.  Here are the options with MACS2:
@@ -225,15 +245,15 @@ In addition to the analysis mode explained above, MACS2 has a number of paramete
     <td>Name of the sample.  The output files will be named using the specified string as the prefix.</td>
   </tr>
   <tr>
-    <td><code>-g <int></code></td>
-    <td>Effective genome size, i.e. the size of the organism’s genome that can be analyzed (not including Ns, repetitive sequences, etc.).  This will be less than the actual genome size.  Parameters are provided for some model organisms, and the default value is ‘hs’ (for *Homo sapiens*), which corresponds to a value of 2.7e9.</td>
+    <td><code>-g &lt;int&gt;</code></td>
+    <td>Effective genome size, i.e. the size of the organism’s genome that can be analyzed (not including Ns, repetitive sequences, etc.).  This will be less than the actual genome size.  Parameters are provided for some model organisms, and the default value is ‘hs’ (for <i>Homo sapiens</i>), which corresponds to a value of 2.7e9.</td>
   </tr>
   <tr>
-    <td><code>-q <float></code></td>
+    <td><code>-q &lt;float&gt;</code></td>
     <td>Minimum q-value (adjusted p-value, or false discovery rate [FDR]) for peak calling (default 0.05).  Reducing this threshold will decrease the number of peaks identified by MACS2 but increase the confidence in the called peaks.</td>
   </tr>
   <tr>
-    <td><code>--keep-dup <arg></code></td>
+    <td><code>--keep-dup &lt;arg&gt;</code></td>
     <td>How to handle PCR duplicates (default: 1, i.e. remove all potential duplicates).  If PCR duplicates have been removed by another program, or if you do not wish for them to be removed, then specify <code>--keep-dup all</code>.  MACS2 also provides for a more sophisticated approach with <code>--keep-dup auto</code>, in which it calculates how many alignments to keep at each position using a binomial distribution.  We recommend the default.</td>
   </tr>
 </table>
