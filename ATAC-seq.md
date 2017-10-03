@@ -37,7 +37,6 @@ In preparing libraries for sequencing, the samples should be amplified using as 
 ### 4. Sequencing depth
 
 Sequencing depth will vary based on the size of the reference genome and the degree of open chromatin expected.  For studies of human samples, [Buenrostro *et al.* (2015)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/) recommend more than 50 million mapped reads per sample.
-[Another important consideration is that a large proportion of reads from an ATAC-seq run typically are derived from the mitochondrial genome (see below for more details).]
 
 ### 5. Sequencing mode
 
@@ -103,7 +102,7 @@ Some things to note when using cutadapt:
 
 #### 2. NGmerge
 
-An alternative approach to adapter removal is provided by NGmerge, which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a minimum length parameter.  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
+An alternative approach to adapter removal is provided by NGmerge, which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a parameter for the minimum length of adapter to match (in fact, it does not perform adapter matching at all).  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
 
 NGmerge is based on the principle that, with paired-end sequencing, adapter contamination occurs only when both reads fully overlap.  The program tests each pair of reads for overlap, and in cases where they do, it clips the 3' overhangs of both reads (Fig. 2).  Reads that do not overlap remain unaltered.
 
@@ -111,6 +110,7 @@ NGmerge is based on the principle that, with paired-end sequencing, adapter cont
   <img src="adapter_removal.png" alt="Adapter removal" width="300">
   <figcaption><strong>Figure 2.</strong>  The original DNA fragment contains sequencing adapters on both ends (gray boxes).  Because the fragment is short, the paired-end reads (R1, R2) extend into the sequencing adapters.  NGmerge aligns the reads, and clips the 3' overhangs.</figcaption>
 </figure>
+<br>
 <br>
 
 NGmerge is available on Odyssey:
@@ -120,12 +120,14 @@ NGmerge is available on Odyssey:
 Of the many arguments available, here are the most important ones for this application:
 
 | Argument   | Description                                  |
-|------------|----------------------------------------------|
+|:----------:|----------------------------------------------|
 | `-a`       | Adapter-removal mode (**must** be specified) |
 | `-e <int>` | Minimum length of overlap, i.e. the minimum DNA fragment length (default 50bp) |
 | `-n <int>` | Number of cores on which to run              |
 | `-v`       | Verbose mode                                 |
 
+
+Other than adapter removal, we do not recommend any trimming of the reads.  Such adjustments can complicate later steps, such as the identification of PCR duplicates.
 
 ## Alignment
 
@@ -166,6 +168,8 @@ Once the indexes are built, the reads can be aligned using Bowtie2.  A brief loo
 
 The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), which contains various alignment information for each input read.  The SAM can be compressed to a binary format (BAM) with [SAMtools](http://www.htslib.org/doc/samtools.html).  This is best accomplished by piping the output from Bowtie2 directly to `samtools view`, e.g.:
 
+    module load bowtie2
+    module load samtools
     bowtie2 <args> | samtools view -b - > <BAM>
 
 Bowtie2 also provides (via stderr) a summary of the mapping results, including counts of reads analyzed, properly paired alignments, and reads that aligned to multiple genomic locations.  By default, Bowtie2 will randomly assign one of multiple equivalent mapping locations for a read.
@@ -184,14 +188,20 @@ Assuming you have not gone the CRISPR route, you will have some mitochondrial re
 2. Remove the mitochondrial reads after alignment.  We have written a python script, creatively named removeChrom.py, that accomplishes this.  For example, to remove all 'chrM' reads from an input BAM file, we would run this:
 
 ```
-    samtools view -h <inBAM> | python /n/informatics_external/temp/stitch/removeChrom.py - - chrM | samtools view -b - > <outBAM>
+module load samtools
+samtools view -h <inBAM> | python /n/informatics_external/temp/stitch/removeChrom.py - - chrM | samtools view -b - > <outBAM>
 ```
 
 #### PCR duplicates
 
 PCR duplicates are exact copies of DNA fragments that arise during PCR.  Since they are artifacts of the library preparation procedure, they may interfere with the biological signal of interest.  Therefore, they should be removed as part of the analysis pipeline.
 
-One commonly used program for removing PCR duplicates is Picard's [MarkDuplicates](http://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates)).  For convenience, we instead recommend removing duplicates with [MACS2](https://github.com/taoliu/MACS) as part of the next peak-calling step.
+One commonly used program for removing PCR duplicates is Picard's [MarkDuplicates](http://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates)).  It is run as follows:
+
+    module load picard
+    java -jar $PICARD_TOOLS_HOME/picard.jar MarkDuplicates I=<inBAM> O=<outBAM> M=dups.txt REMOVE_DUPLICATES=true
+
+The output file specified by 'M=' lists counts of alignments analyzed and duplicates identified.
 
 
 ## Peak calling
@@ -209,17 +219,18 @@ With paired-end sequencing, the types of alignments that are produced fall into 
   <figcaption><strong>Figure 3.</strong>  Paired-end alignment possibilities.  A: "Properly paired" alignments.  Reads that are properly paired align in opposite orientations on the same reference sequence (chromosome).  The reads may overlap to some extent (bottom).  B: "Singleton" alignments.  A read can be not properly paired for several reasons: if its mate is unaligned (upper left), aligns to a different chromosome (upper right), aligns in the incorrect orientation (middle cases), or aligns in the correct orientation but at an invalid distance (bottom).</figcaption>
 </figure>
 <br>
+<br>
 
 An important consideration with MACS2 is deciding which types of alignments should be analyzed and how those alignments should be interpreted.  The analysis mode is set by the `-f` argument.  Here are the options with MACS2:
 
-1. Analyze only properly paired alignments, but ignore R2 reads and treat R1 reads as singletons.  This is the default option (`-f AUTO`).  MACS2 creates a model of the fragment lengths and extends the 3’ ends of the R1 reads to the calculated average length.  An alternative is to skip this model building and instead extend each read to a specified length (e.g., `--nomodel --extsize 300` for 300bp fragments).  The value of the length parameter is usually determined from the average size during library preparation.  However, neither approach utilizes the value of paired-end sequencing, which defines both fragment ends.
+1. Analyze only properly paired alignments, but ignore R2 reads and treat R1 reads as singletons.  This is the default option (`-f AUTO`).  MACS2 creates a model of the fragment lengths and extends the 3' ends of the R1 reads to the calculated average length.  An alternative is to skip this model building and instead extend each read to a specified length (e.g., `--nomodel --extsize 300` for 300bp fragments).  The value of the length parameter is usually determined from the average size during library preparation.  However, neither approach utilizes the value of paired-end sequencing, which defines both fragment ends.
 
 2. Analyze only properly paired alignments with `-f BAMPE`.  Here, the fragments are defined by the paired alignments’ ends, and there is no modeling or artificial extension.  Singleton alignments are ignored.  This is the preferred option for using only properly paired alignments.
 
-3. Analyze all alignments.  For this approach, we have written a python script, SAMtoBED.py.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are three options for the singletons: keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the “extend to average length” option (-x):
+3. Analyze all alignments.  For this approach, we have written a python script, SAMtoBED.py.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are three options for the singletons: keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the "extend to average length" option (-x):
 
 ```
-    samtools view -h <BAM> | python /n/informatics_external/temp/stitch/SAMtoBED.py -i - -o <BED> -x -s -v
+samtools view -h <BAM> | python /n/informatics_external/temp/stitch/SAMtoBED.py -i - -o <BED> -x -v
 ```
 
 The output from SAMtoBED.py is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) that should be analyzed by MACS2 with `-f BEDPE`.
@@ -252,7 +263,7 @@ In addition to the analysis mode explained above, MACS2 has a number of paramete
   </tr>
   <tr>
     <td nowrap align="center"><code>--keep-dup &lt;arg&gt;</code></td>
-    <td>How to handle PCR duplicates (default: 1, i.e. remove all potential duplicates).  If PCR duplicates have been removed by another program, or if you do not wish for them to be removed, then specify <code>--keep-dup all</code>.  MACS2 also provides for a more sophisticated approach with <code>--keep-dup auto</code>, in which it calculates how many alignments to keep at each position using a binomial distribution.  We recommend the default.</td>
+    <td>How to handle PCR duplicates (default: 1, i.e. remove all potential duplicates).  If PCR duplicates have been removed by another program, such as Picard's MarkDuplicates, then specify <code>--keep-dup all</code>.</td>
   </tr>
 </table>
 
