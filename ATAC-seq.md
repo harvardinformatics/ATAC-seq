@@ -1,20 +1,20 @@
-Title: ATAC-seq Guidelines
-Date: 2017-10-01
-Category: Tutorials
-Author: John M. Gaspar
-Tags: ATAC-seq
-Summary: This tutorial provides a workflow notes and recommendations for ATAC-seq analysis.
+Title: ATAC-seq Guidelines<br>
+Date: 2017-10-01<br>
+Category: Tutorials<br>
+Author: John M. Gaspar<br>
+Tags: ATAC-seq<br>
+Summary: This tutorial provides a workflow notes and recommendations for ATAC-seq analysis.<br>
 
 ## Table of Contents
-[ATAC-seq overview](#overview)
-[Experimental design](#design)
-[Compute access / Odyssey](#odyssey)
-[Sequence reads](#reads)
-[Quality control](#qc)
-[Alignment](#alignment)
-[Peak calling](#peak)
-[Next steps](#next)
-[References](#references)
+[ATAC-seq overview](#overview)<br>
+[Experimental design](#design)<br>
+[Compute access / Odyssey](#odyssey)<br>
+[Sequence reads](#reads)<br>
+[Quality control](#qc)<br>
+[Alignment](#alignment)<br>
+[Peak calling](#peak)<br>
+[Next steps](#next)<br>
+[References](#references)<br>
 
 
 ## ATAC-seq overview <a name="overview"></a>
@@ -208,7 +208,7 @@ samtools view -h <inBAM> | python /n/informatics_external/temp/stitch/removeChro
 
 PCR duplicates are exact copies of DNA fragments that arise during PCR.  Since they are artifacts of the library preparation procedure, they may interfere with the biological signal of interest.  Therefore, they should be removed as part of the analysis pipeline.
 
-One commonly used program for removing PCR duplicates is Picard's [MarkDuplicates](http://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates)).  It is run as follows:
+One commonly used program for removing PCR duplicates is Picard's [MarkDuplicates](http://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates).  It is run as follows:
 
     module load picard
     java -jar $PICARD_TOOLS_HOME/picard.jar MarkDuplicates I=<inBAM> O=<outBAM> M=dups.txt REMOVE_DUPLICATES=true
@@ -228,7 +228,7 @@ With paired-end sequencing, the types of alignments that are produced fall into 
 
 <figure>
   <img src="alignments.png" alt="Alignment types" width="700">
-  <figcaption><strong>Figure 3.</strong>  Paired-end alignments.  A: Reads that are properly paired align in opposite orientations on the same reference sequence (chromosome).  The reads may overlap to some extent (bottom).  B: A singleton read (R1) can be not properly paired for several reasons: if its mate is unaligned (upper left), aligns to a different chromosome (upper right), aligns in the incorrect orientation (middle cases), or aligns in the correct orientation but at an invalid distance (bottom).  In all cases except the upper left, the R2 read is also a singleton.</figcaption>
+  <figcaption><strong>Figure 3.</strong>  Paired-end alignments.  <strong>A:</strong> Reads that are properly paired align in opposite orientations on the same reference sequence (chromosome).  The reads may overlap to some extent (bottom).  <strong>B:</strong> A singleton read (R1) can be not properly paired for several reasons: if its mate (R2) is unaligned (upper left), aligns to a different chromosome (upper right), aligns in the incorrect orientation (middle cases), or aligns in the correct orientation but at an invalid distance (bottom).  In all cases except the upper left, the R2 read is also a singleton.</figcaption>
 </figure>
 <br>
 <br>
@@ -249,7 +249,7 @@ The output from SAMtoBED.py is a [BED file](https://genome.ucsc.edu/FAQ/FAQforma
 
 (Note that the BEDTools program [bamtobed](http://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html) program cannot be used here, since its output is in a nonstandard BED format that MACS2 cannot analyze.)
 
-In deciding among these options, it may help to consider the counts produced by Bowtie2, which indicate how many alignments fall into each category.  For example, if most of the reads were aligned in proper pairs, it may be sufficient to use option #2.  On the other hand, option #3 is preferred if a substantial fraction of the reads are singletons.
+In deciding among these analysis options, it may help to consider the counts produced by Bowtie2, which indicate how many alignments fall into each category.  For example, if most of the reads were aligned in proper pairs, it may be sufficient to use option #2.  On the other hand, option #3 is preferred if a substantial fraction of the reads are singletons.
 
 
 ### Other arguments
