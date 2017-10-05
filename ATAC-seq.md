@@ -11,7 +11,7 @@ Summary: This tutorial provides a workflow notes and recommendations for ATAC-se
 [Compute access / Odyssey](#odyssey)<br>
 [Sequence reads](#reads)<br>
 [Quality control](#qc)<br>
-[Alignment](#alignment)<br>
+[Alignment](#alignments)<br>
 [Peak calling](#peak)<br>
 [Next steps](#next)<br>
 [References](#references)<br>
@@ -23,7 +23,7 @@ ATAC-seq (Assay for Transposase-Accessible Chromatin with high-throughput sequen
 
 <figure>
   <img src="overview.png" alt="ATAC-seq" width="600">
-  <figcaption><strong>Figure 1.</strong>  ATAC-seq overview (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/">Buenrostro <i>et al.</i>, 2015</a>)</figcaption>
+  <figcaption><strong>Figure 1.</strong>  ATAC-seq overview (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/">Buenrostro <i>et al.</i>, 2015</a>).</figcaption>
 </figure>
 <br>
 
@@ -141,7 +141,7 @@ Of the many arguments available, here are the most important ones for this appli
 Other than adapter removal, we do not recommend any trimming of the reads.  Such adjustments can complicate later steps, such as the identification of PCR duplicates.
 
 
-## Alignment <a name="alignment"></a>
+## Alignment <a name="alignments"></a>
 
 The next step is to align the reads to a reference genome.  There are many programs available to perform the alignment.  Two of the most popular are [BWA](http://bio-bwa.sourceforge.net/bwa.shtml) and [Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml).  We will focus on Bowtie2 here.
 
@@ -195,7 +195,7 @@ It is a well-known problem that ATAC-seq datasets usually contain a large percen
 
 Assuming you have not gone the CRISPR route, you will have some mitochondrial reads in your sequence data.  Since we are not interested in ATAC-seq peaks in the mitochondrial genome, these reads will only complicate the subsequent steps.  Therefore, we recommend that they be removed from further analysis, via one of the following methods:
 
-1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  This is the cleanest approach, since 'chrM' will never enter the analysis. The downside is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
+1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
 
 2. Remove the mitochondrial reads after alignment.  We have written a python script, creatively named removeChrom.py, that accomplishes this.  For example, to remove all 'chrM' reads from an input BAM file, we would run this:
 
