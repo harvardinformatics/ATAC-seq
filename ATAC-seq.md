@@ -3,7 +3,7 @@ Date: 2017-10-01<br>
 Category: Tutorials<br>
 Author: John M. Gaspar<br>
 Tags: ATAC-seq<br>
-Summary: This tutorial provides a workflow notes and recommendations for ATAC-seq analysis.<br>
+Summary: This tutorial provides notes and recommendations for ATAC-seq analysis.<br>
 
 ## Table of Contents
 [ATAC-seq overview](#overview)<br>
@@ -62,7 +62,7 @@ For ATAC-seq, we recommend **paired-end sequencing**, for several reasons.
 
 ## Compute access / Odyssey <a name="odyssey"></a>
 
-This workflow assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
+This tutorial assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
 
 Programs, like those listed below (e.g. FastQC, Bowtie2, MACS2), are run on Odyssey by submitting jobs via the [SLURM management system](https://www.rc.fas.harvard.edu/resources/running-jobs/).
 The jobs take the form of shell scripts, which are submitted with the [sbatch command](https://www.rc.fas.harvard.edu/resources/running-jobs/#Submitting_batch_jobs_using_the_sbatch_command).
@@ -124,11 +124,12 @@ NGmerge is based on the principle that, with paired-end sequencing, adapter cont
 <br>
 <br>
 
-NGmerge is available on Odyssey:
+NGmerge is available on Odyssey in the ATAC-seq module:
 
-    /n/informatics_external/temp/stitch/stitch --help
+    module load ATAC-seq
+    NGmerge -1 <sample>.R1.fastq.gz -2 <sample>.R2.fastq.gz -o <sample>
 
-Of the many arguments available, here are the most important ones for this application:
+The output files will be &lt;sample&gt;\_1.fastq.gz and &lt;sample&gt;\_2.fastq.gz.  Of the many arguments available with NGmerge, here are the most important ones for this application:
 
 | Argument   | Description                                  |
 |:----------:|----------------------------------------------|
@@ -197,11 +198,12 @@ Assuming you have not gone the CRISPR route, you will have some mitochondrial re
 
 1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
 
-2. Remove the mitochondrial reads after alignment.  We have written a python script, creatively named removeChrom.py, that accomplishes this.  For example, to remove all 'chrM' reads from an input BAM file, we would run this:
+2. Remove the mitochondrial reads after alignment.  A python script, creatively named removeChrom.py, is available in the ATAC-seq module to accomplish this.  For example, to remove all 'chrM' reads from a BAM file, we would run this:
 
 ```
 module load samtools
-samtools view -h <inBAM> | python /n/informatics_external/temp/stitch/removeChrom.py - - chrM | samtools view -b - > <outBAM>
+module load ATAC-seq
+samtools view -h <inBAM> | removeChrom.py - - chrM | samtools view -b - > <outBAM>
 ```
 
 #### PCR duplicates
@@ -239,10 +241,11 @@ An important consideration when using MACS2 is deciding which types of alignment
 
 2. Analyze only properly paired alignments with `-f BAMPE`.  Here, the fragments are defined by the paired alignments' ends, and there is no modeling or artificial extension.  Singleton alignments are ignored.  This is the preferred option for using only properly paired alignments.
 
-3. Analyze all alignments.  For this approach, we have written a python script, SAMtoBED.py.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are three options for the singletons: keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the "extend to average length" option (`-x`):
+3. Analyze all alignments.  For this approach, a python script, SAMtoBED.py, is available in the ATAC-seq module.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are three options for the singletons: keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the "extend to average length" option (`-x`):
 
 ```
-samtools view -h <BAM> | python /n/informatics_external/temp/stitch/SAMtoBED.py -i - -o <BED> -x -v
+module load ATAC-seq
+samtools view -h <BAM> | SAMtoBED.py -i - -o <BED> -x -v
 ```
 
 The output from SAMtoBED.py is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) that should be analyzed by MACS2 with `-f BEDPE`.
