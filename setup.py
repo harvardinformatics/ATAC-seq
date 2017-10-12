@@ -6,7 +6,7 @@ setup(
     description = 'ATAC-seq guidelines',
     author = 'John M. Gaspar',
     author_email = 'jgaspar@fas.harvard.edu',
-    license = 'GPLv2',
+    license = 'MIT',
     packages = ['atacseq'],
     zip_safe = False,
     entry_points = {
