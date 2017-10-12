@@ -6,7 +6,7 @@ setup(
     description = 'Attack your seqs',
     author = 'John Gaspar',
     author_email = 'john_gaspar@harvard.edu',
-    license = 'GPLv2',
+    license = 'MIT',
     packages = ['atacseq'],
     zip_safe = False,
     entry_points = {
