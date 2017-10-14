@@ -1,10 +1,3 @@
-Title: ATAC-seq Guidelines<br>
-Date: 2017-10-01<br>
-Category: Tutorials<br>
-Author: John M. Gaspar<br>
-Tags: ATAC-seq<br>
-Summary: This tutorial provides notes and recommendations for ATAC-seq analysis.<br>
-
 ## Table of Contents
 [ATAC-seq overview](#overview)<br>
 [Experimental design](#design)<br>
