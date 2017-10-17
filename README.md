@@ -58,7 +58,7 @@ For ATAC-seq, we recommend **paired-end sequencing**, for several reasons.
 This tutorial assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
 
 Programs, like those listed below (e.g. FastQC, Bowtie2, MACS2), are run on Odyssey by submitting jobs via the [SLURM management system](https://www.rc.fas.harvard.edu/resources/running-jobs/).
-The jobs take the form of shell scripts, which are submitted with the [sbatch command](https://www.rc.fas.harvard.edu/resources/running-jobs/#Submitting_batch_jobs_using_the_sbatch_command).
+The jobs take the form of shell scripts, which are submitted with the [sbatch command](https://www.rc.fas.harvard.edu/resources/running-jobs/#Submitting_batch_jobs_using_the_sbatch_command).  The shell scripts request computational resources (time, memory, and number of cores) for a job; it is better to request more resources than expected, rather than risk having a job terminated prematurely for exceeding its limits.
 
 
 ## Sequence reads <a name="reads"></a>
@@ -87,7 +87,7 @@ On Odyssey, each sequence file would be analyzed like this:
     fastqc <sample>.R1.fastq.gz
 
 
-The output from FastQC is an HTML file, which can be examined via a web browser.  The report lists various statistics about your reads, such as their count and lengths.  It also provides graphical representations of your data based on a number of categories, including quality scores, GC levels, PCR duplicates, and adapter content.
+FastQC is efficient; it can process a file of 20 million reads in about 5 minutes with less than 250MB memory used.  The output from FastQC is an HTML file, which can be examined via a web browser.  The report lists various statistics about your reads, such as their count and lengths.  It also provides graphical representations of your data based on a number of categories, including quality scores, GC levels, PCR duplicates, and adapter content.
 
 The FastQC report is there to alert you to potential issues with your data, but it is not the final determinant of the outcome of your ATAC-seq experiment.  Do not be overly concerned if your FastQC reports contain one or more red 'X' marks; this is not a reason to delete your data and start all over again.
 
@@ -120,7 +120,7 @@ NGmerge is based on the principle that, with paired-end sequencing, adapter cont
 NGmerge is available on Odyssey in the ATAC-seq module:
 
     module load ATAC-seq
-    NGmerge -1 <sample>.R1.fastq.gz -2 <sample>.R2.fastq.gz -o <sample>
+    NGmerge -a -1 <sample>.R1.fastq.gz -2 <sample>.R2.fastq.gz -o <sample>
 
 The output files will be &lt;sample&gt;\_1.fastq.gz and &lt;sample&gt;\_2.fastq.gz.  Of the many arguments available with NGmerge, here are the most important ones for this application:
 
@@ -131,6 +131,8 @@ The output files will be &lt;sample&gt;\_1.fastq.gz and &lt;sample&gt;\_2.fastq.
 | `-n <int>` | Number of cores on which to run              |
 | `-v`       | Verbose mode                                 |
 
+
+For input files of 20 million paired reads, NGmerge should run in less than one hour on a single core, with minimal memory usage.  Of course, the run-time will decrease with more cores (`-n`).
 
 Other than adapter removal, we do not recommend any trimming of the reads.  Such adjustments can complicate later steps, such as the identification of PCR duplicates.
 
@@ -176,7 +178,9 @@ The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), whic
 
     module load bowtie2
     module load samtools
-    bowtie2 <args> | samtools view -b - > <BAM>
+    bowtie2 --very-sensitive -x <genomeIndexName> -1 <sample>_1.fastq.gz -2 <sample>_2.fastq.gz | samtools view -b - > <BAM>
+
+For input files of 20 million paired reads, this command takes around five hours.  This can be decreased by increasing the number of cores in the Bowtie2 command.  For example, we could specify eight cores for Bowtie2 with `-p 8` and adjust the request in the SLURM script to `#SBATCH -n 9` (that is, eight cores for Bowtie2 and one for SAMtools).  The memory usage of Bowtie2 depends primarily on the genome length; enough must be requested to load the genome indexes.
 
 Bowtie2 also provides (via stderr) a summary of the mapping results, including counts of reads analyzed, properly paired alignments, and reads that aligned to multiple genomic locations.  By default, Bowtie2 will randomly assign one of multiple equivalent mapping locations for a read.
 
@@ -191,12 +195,12 @@ Assuming you have not gone the CRISPR route, you will have some mitochondrial re
 
 1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
 
-2. Remove the mitochondrial reads after alignment.  A python script, creatively named removeChrom.py, is available in the ATAC-seq module to accomplish this.  For example, to remove all 'chrM' reads from a BAM file, we would run this:
+2. Remove the mitochondrial reads after alignment.  A python script, creatively named removeChrom, is available in the ATAC-seq module to accomplish this.  For example, to remove all 'chrM' reads from a BAM file, we would run this:
 
 ```
 module load samtools
 module load ATAC-seq
-samtools view -h <inBAM> | removeChrom.py - - chrM | samtools view -b - > <outBAM>
+samtools view -h <inBAM> | removeChrom - - chrM | samtools view -b - > <outBAM>
 ```
 
 #### PCR duplicates
@@ -234,14 +238,14 @@ An important consideration when using MACS2 is deciding which types of alignment
 
 2. Analyze only properly paired alignments with `-f BAMPE`.  Here, the fragments are defined by the paired alignments' ends, and there is no modeling or artificial extension.  Singleton alignments are ignored.  This is the preferred option for using only properly paired alignments.
 
-3. Analyze all alignments.  For this approach, a python script, SAMtoBED.py, is available in the ATAC-seq module.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are three options for the singletons: keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the "extend to average length" option (`-x`):
+3. Analyze all alignments.  For this approach, a python script, SAMtoBED, is available in the ATAC-seq module.  This script converts the read alignments to BED intervals, treating the properly paired alignments as such and extending the singleton alignments as specified.  There are four options for the singletons: ignore them, keep them as is, extend them to an arbitrary length (similar to the `--extsize` option of MACS2), or extend them to the average length calculated from the properly paired alignments.  Here is an example command, using the "extend to average length" option (`-x`):
 
 ```
 module load ATAC-seq
-samtools view -h <BAM> | SAMtoBED.py -i - -o <BED> -x -v
+samtools view -h <BAM> | SAMtoBED -i - -o <BED> -x -v
 ```
 
-The output from SAMtoBED.py is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) that should be analyzed by MACS2 with `-f BEDPE`.
+The output from SAMtoBED is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) that should be analyzed by MACS2 with `-f BEDPE`.
 
 (Note that the BEDTools program [bamtobed](http://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html) program cannot be used here, since its output is in a nonstandard BED format that MACS2 cannot analyze.)
 
@@ -282,6 +286,8 @@ The full MACS2 command for an ATAC-seq dataset from *C. elegans*, using all alig
 
     module load macs2
     macs2 callpeak -t <BED> -f BEDPE -n NAME -g ce --keep-dup all
+
+Calling peaks for 20 million fragments should require less than ten minutes and 1GB of memory.
 
 
 ### Output files

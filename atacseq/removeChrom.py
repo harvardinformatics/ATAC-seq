@@ -116,7 +116,7 @@ def main():
   '''Main.'''
   args = sys.argv[1:]
   if len(args) < 3:
-    sys.stderr.write('Usage: ./removeChrom.py <inSAM> <outSAM> [<chrom>]+\n')
+    sys.stderr.write('Usage: removeChrom <inSAM> <outSAM> [<chrom>]+\n')
     sys.stderr.write('  [<chrom>]+  One or more chromosomes (reference\n')
     sys.stderr.write('              sequences) to be removed from the SAM\n')
     sys.exit(-1)
