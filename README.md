@@ -55,7 +55,7 @@ For ATAC-seq, we recommend **paired-end sequencing**, for several reasons.
 
 ## Compute access / Odyssey <a name="odyssey"></a>
 
-This tutorial assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
+This document assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
 
 Programs, like those listed below (e.g. FastQC, Bowtie2, MACS2), are run on Odyssey by submitting jobs via the [SLURM management system](https://www.rc.fas.harvard.edu/resources/running-jobs/).
 The jobs take the form of shell scripts, which are submitted with the [sbatch command](https://www.rc.fas.harvard.edu/resources/running-jobs/#Submitting_batch_jobs_using_the_sbatch_command).  The shell scripts request computational resources (time, memory, and number of cores) for a job; it is better to request more resources than expected, rather than risk having a job terminated prematurely for exceeding its limits.
@@ -69,8 +69,8 @@ For paired-end sequencing, there are two files per sample: &lt;sample&gt;.R1.fas
 
 Samples that were sequenced on multiple lanes may have separate files for each lane; these should be concatenated using the `cat` command:
 
-    cat <sample>.lane1.R1.fastq.gz <sample>.lane2.R1.fastq.gz > <sample>.R1.fastq.gz
-    cat <sample>.lane1.R2.fastq.gz <sample>.lane2.R2.fastq.gz > <sample>.R2.fastq.gz
+    cat  <sample>.lane1.R1.fastq.gz  <sample>.lane2.R1.fastq.gz  >  <sample>.R1.fastq.gz
+    cat  <sample>.lane1.R2.fastq.gz  <sample>.lane2.R2.fastq.gz  >  <sample>.R2.fastq.gz
 
 However, different replicates should not be concatenated, but instead should be processed separately.
 
@@ -101,8 +101,8 @@ For reads derived from short DNA fragments, the 3' ends may contain portions of 
 One of the most widely used adapter removal programs is [cutadapt](http://cutadapt.readthedocs.io/en/stable/guide.html).  Cutadapt searches input reads for a given adapter sequence.  When it finds the adapter, it removes the adapter and everything that follows it.  Reads that do not match the adapter remain unaltered.
 
 Some things to note when using cutadapt:
-- The adapter sequences need to be provided via the `-a` argument.  If you do not know which adapters were used for your samples, consult the sequencing core.
-- Cutadapt will attempt to match a minimal length of the provided adapter sequence.  The default value for this argument (`-O`) is 3bp.  The downside of using such a small value is the possibility of false positives (trimming reads' good sequences that happen to match part of the adapter).  On the other hand, increasing this parameter will result in more false negatives, since reads with adapter contamination may contain sequencing errors that prevent a match.
+* The adapter sequences need to be provided via the `-a` argument.  If you do not know which adapters were used for your samples, consult the sequencing core.
+* Cutadapt will attempt to match a minimal length of the provided adapter sequence.  The default value for this argument (`-O`) is 3bp.  The downside of using such a small value is the possibility of false positives (trimming reads' good sequences that happen to match part of the adapter).  On the other hand, increasing this parameter will result in more false negatives, since reads with adapter contamination may contain sequencing errors that prevent a match.
 
 #### 2. NGmerge
 
@@ -132,6 +132,8 @@ The output files will be &lt;sample&gt;\_1.fastq.gz and &lt;sample&gt;\_2.fastq.
 | `-v`       | Verbose mode                                 |
 
 
+For more information about the parameters and options of NGmerge, please consult the [UserGuide](https://github.com/harvardinformatics/NGmerge/blob/master/UserGuide.pdf) that accompanies the [source code](https://github.com/harvardinformatics/NGmerge) on GitHub.
+
 For input files of 20 million paired reads, NGmerge should run in less than one hour on a single core, with minimal memory usage.  Of course, the run-time will decrease with more cores (`-n`).
 
 Other than adapter removal, we do not recommend any trimming of the reads.  Such adjustments can complicate later steps, such as the identification of PCR duplicates.
@@ -156,7 +158,7 @@ Once the indexes are built, the reads can be aligned using Bowtie2.  A brief loo
 
 <table>
   <tr>
-    <th>Argument</th>
+    <th align="center">Argument</th>
     <th>Description</th>
   </tr>
   <tr>
@@ -189,9 +191,9 @@ Bowtie2 also provides (via stderr) a summary of the mapping results, including c
 
 #### Mitochondrial reads
 
-It is a well-known problem that ATAC-seq datasets usually contain a large percentage of reads that is derived from mitochondrial DNA (for example, see [this discussion](http://seqanswers.com/forums/showthread.php?t=35318)).  Some have gone as far as [using CRISPR to reduce mitochondrial contamination](https://www.nature.com/articles/s41598-017-02547-w).
+It is a well-known problem that ATAC-seq datasets usually contain a large percentage of reads that is derived from mitochondrial DNA (for example, see [this discussion](http://seqanswers.com/forums/showthread.php?t=35318)).  Some have gone as far as [using CRISPR to reduce mitochondrial contamination](https://www.nature.com/articles/s41598-017-02547-w).  The recently published [Omni-ATAC method](https://www.nature.com/articles/nmeth.4396) uses detergents to remove mitochondria and is likely to be more accessible for most researchers (but, do **not** follow their computational workflow).
 
-Assuming you have not gone the CRISPR route, you will have some mitochondrial reads in your sequence data.  Since we are not interested in ATAC-seq peaks in the mitochondrial genome, these reads will only complicate the subsequent steps.  Therefore, we recommend that they be removed from further analysis, via one of the following methods:
+Regardless of your lab protocol, you will have some mitochondrial reads in your sequence data.  Since there are no ATAC-seq peaks of interest in the mitochondrial genome, these reads will only complicate the subsequent steps.  Therefore, we recommend that they be removed from further analysis, via one of the following methods:
 
 1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
 
@@ -258,7 +260,7 @@ In addition to the analysis mode explained above, MACS2 has a number of paramete
 
 <table>
   <tr>
-    <th>Argument</th>
+    <th align="center">Argument</th>
     <th>Description</th>
   </tr>
   <tr>
@@ -339,6 +341,8 @@ Andrews S. (2010).  FastQC: a quality control tool for high throughput sequence 
 Buenrostro JD, Giresi PG, Zaba LC, Chang HY, Greenleaf WJ.  Transposition of native chromatin for fast and sensitive epigenomic profiling of open chromatin, DNA-binding proteins and nucleosome position.  Nat Methods. 2013 Dec;10(12):1213-8.
 
 Buenrostro JD, Wu B, Chang HY, Greenleaf WJ.  ATAC-seq: A Method for Assaying Chromatin Accessibility Genome-Wide.  Curr Protoc Mol Biol. 2015 Jan 5;109:21.29.1-9.
+
+Corces MR, Trevino AE, Hamilton EG, Greenside PG, Sinnott-Armstrong NA, Vesuna S, Satpathy AT, Rubin AJ, Montine KS, Wu B, Kathiria A, Cho SW, Mumbach MR, Carter AC, Kasowski M, Orloff LA, Risca VI, Kundaje A, Khavari PA, Montine TJ, Greenleaf WJ, Chang HY.  An improved ATAC-seq protocol reduces background and enables interrogation of frozen tissues.  Nat Methods. 2017 Oct;14(10):959-962.
 
 Heinz S, Benner C, Spann N, Bertolino E, Lin YC, Laslo P, Cheng JX, Murre C, Singh H, Glass CK.  Simple combinations of lineage-determining transcription factors prime cis-regulatory elements required for macrophage and B cell identities.  Mol Cell. 2010 May 28;38(4):576-89.
 
