@@ -176,15 +176,15 @@ Once the indexes are built, the reads can be aligned using Bowtie2.  A brief loo
 </table>
 
 
-The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), which contains alignment information for each input read.  The SAM can be compressed to a binary format (BAM) with [SAMtools](http://www.htslib.org/doc/samtools.html).  This is best accomplished by piping the output from Bowtie2 directly to `samtools view`, e.g.:
+The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), which contains alignment information for each input read.  The SAM can be compressed to a binary format (BAM) and sorted with [SAMtools](http://www.htslib.org/doc/samtools.html).  This is best accomplished by piping the output from Bowtie2 directly to `samtools view` and `samtools sort`, e.g.:
 
     module load bowtie2
     module load samtools
-    bowtie2 --very-sensitive -x <genomeIndexName> -1 <sample>_1.fastq.gz -2 <sample>_2.fastq.gz | samtools view -b - > <BAM>
+    bowtie2 --very-sensitive -x <genomeIndexName> -1 <sample>_1.fastq.gz -2 <sample>_2.fastq.gz | samtools view -u - | samtools sort - > <BAM>
 
-For input files of 20 million paired reads, this command takes around five hours.  This can be decreased by increasing the number of cores in the Bowtie2 command.  For example, we could specify eight cores for Bowtie2 with `-p 8` and adjust the request in the SLURM script to `#SBATCH -n 9` (that is, eight cores for Bowtie2 and one for SAMtools).  The memory usage of Bowtie2 depends primarily on the genome length; enough must be requested to load the genome indexes.
+For input files of 20 million paired reads, this command takes around five hours.  This can be decreased by increasing the number of cores in the Bowtie2 command.  For example, we could specify eight cores for Bowtie2 with `-p 8` and adjust the request in the SLURM script to `#SBATCH -n 10` (that is, eight cores for Bowtie2 and one each for SAMtools view and sort).  The memory usage of Bowtie2 depends primarily on the genome length; enough must be requested to load the genome indexes.
 
-Bowtie2 also provides (via stderr) a summary of the mapping results, including counts of reads analyzed, properly paired alignments, and reads that aligned to multiple genomic locations.  By default, Bowtie2 will randomly assign one of multiple equivalent mapping locations for a read.
+Bowtie2 also provides (via stderr) a summary of the mapping results, including counts of reads analyzed, properly paired alignments, and reads that aligned to multiple genomic locations.  By default, Bowtie2 will randomly choose one of multiple equivalent mapping locations for a read.
 
 
 ### Alignment adjustments
@@ -251,7 +251,7 @@ The output from SAMtoBED is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.h
 
 (Note that the BEDTools program [bamtobed](http://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html) program cannot be used here, since its output is in a nonstandard BED format that MACS2 cannot analyze.)
 
-In deciding among these analysis options, it may help to consider the counts produced by Bowtie2, which indicate how many alignments fall into each category.  For example, if most of the reads were aligned in proper pairs, it may be sufficient to use option #2.  On the other hand, option #3 is preferred if a substantial fraction of the reads are singletons.
+In deciding among these analysis options, it may help to consider the counts produced by Bowtie2, which indicate how many alignments fall into each category.  For example, if most of the reads are aligned in proper pairs, it may be sufficient to use option #2.  On the other hand, option #3 is preferred if a substantial fraction of the reads consists of singletons.
 
 
 ### Other arguments
