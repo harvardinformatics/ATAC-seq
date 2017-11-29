@@ -101,7 +101,9 @@ For reads derived from short DNA fragments, the 3' ends may contain portions of 
 One of the most widely used adapter removal programs is [cutadapt](http://cutadapt.readthedocs.io/en/stable/guide.html).  Cutadapt searches input reads for a given adapter sequence.  When it finds the adapter, it removes the adapter and everything that follows it.  Reads that do not match the adapter remain unaltered.
 
 Some things to note when using cutadapt:
+
 * The adapter sequences need to be provided via the `-a` argument.  If you do not know which adapters were used for your samples, consult the sequencing core.
+
 * Cutadapt will attempt to match a minimal length of the provided adapter sequence.  The default value for this argument (`-O`) is 3bp.  The downside of using such a small value is the possibility of false positives (trimming reads' good sequences that happen to match part of the adapter).  On the other hand, increasing this parameter will result in more false negatives, since reads with adapter contamination may contain sequencing errors that prevent a match.
 
 #### 2. NGmerge
