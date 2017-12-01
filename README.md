@@ -101,7 +101,9 @@ For reads derived from short DNA fragments, the 3' ends may contain portions of 
 One of the most widely used adapter removal programs is [cutadapt](http://cutadapt.readthedocs.io/en/stable/guide.html).  Cutadapt searches input reads for a given adapter sequence.  When it finds the adapter, it removes the adapter and everything that follows it.  Reads that do not match the adapter remain unaltered.
 
 Some things to note when using cutadapt:
+
 * The adapter sequences need to be provided via the `-a` argument.  If you do not know which adapters were used for your samples, consult the sequencing core.
+
 * Cutadapt will attempt to match a minimal length of the provided adapter sequence.  The default value for this argument (`-O`) is 3bp.  The downside of using such a small value is the possibility of false positives (trimming reads' good sequences that happen to match part of the adapter).  On the other hand, increasing this parameter will result in more false negatives, since reads with adapter contamination may contain sequencing errors that prevent a match.
 
 #### 2. NGmerge
@@ -273,7 +275,7 @@ In addition to the analysis mode explained above, MACS2 has a number of paramete
   </tr>
   <tr>
     <td align="center"><code>-q &lt;float&gt;</code></td>
-    <td>Minimum q-value (adjusted p-value, or false discovery rate [FDR]) for peak calling (default 0.05).  Reducing this threshold will decrease the number of peaks identified by MACS2 but increase the confidence in the called peaks.</td>
+    <td>Minimum <i>q</i>-value (adjusted <i>p</i>-value, or false discovery rate [FDR]) for peak calling (default 0.05).  Reducing this threshold will decrease the number of peaks identified by MACS2 but increase the confidence in the called peaks.</td>
   </tr>
   <tr>
     <td nowrap align="center"><code>--keep-dup &lt;arg&gt;</code></td>
@@ -294,7 +296,7 @@ Calling peaks for 20 million fragments should require less than ten minutes and 
 
 ### Output files
 
-There are three output files from a standard `macs2 callpeak` run.  For a run with `-n NAME`, the output files are NAME_peaks.xls, NAME_peaks.narrowPeak, and NAME_summits.bed.  The most useful file is NAME_peaks.narrowPeak, a plain-text BED file that lists the genomic coordinates of each peak called, along with various statistics (fold-change, p- and q-values, etc.).
+There are three output files from a standard `macs2 callpeak` run.  For a run with `-n NAME`, the output files are NAME_peaks.xls, NAME_peaks.narrowPeak, and NAME_summits.bed.  The most useful file is NAME_peaks.narrowPeak, a plain-text BED file that lists the genomic coordinates of each peak called, along with various statistics (fold-change, *p*- and *q*-values, etc.).
 
 
 ## Next steps <a name="next"></a>
