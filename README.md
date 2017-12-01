@@ -275,7 +275,7 @@ In addition to the analysis mode explained above, MACS2 has a number of paramete
   </tr>
   <tr>
     <td align="center"><code>-q &lt;float&gt;</code></td>
-    <td>Minimum q-value (adjusted p-value, or false discovery rate [FDR]) for peak calling (default 0.05).  Reducing this threshold will decrease the number of peaks identified by MACS2 but increase the confidence in the called peaks.</td>
+    <td>Minimum <i>q</i>-value (adjusted <i>p</i>-value, or false discovery rate [FDR]) for peak calling (default 0.05).  Reducing this threshold will decrease the number of peaks identified by MACS2 but increase the confidence in the called peaks.</td>
   </tr>
   <tr>
     <td nowrap align="center"><code>--keep-dup &lt;arg&gt;</code></td>
@@ -296,7 +296,7 @@ Calling peaks for 20 million fragments should require less than ten minutes and 
 
 ### Output files
 
-There are three output files from a standard `macs2 callpeak` run.  For a run with `-n NAME`, the output files are NAME_peaks.xls, NAME_peaks.narrowPeak, and NAME_summits.bed.  The most useful file is NAME_peaks.narrowPeak, a plain-text BED file that lists the genomic coordinates of each peak called, along with various statistics (fold-change, p- and q-values, etc.).
+There are three output files from a standard `macs2 callpeak` run.  For a run with `-n NAME`, the output files are NAME_peaks.xls, NAME_peaks.narrowPeak, and NAME_summits.bed.  The most useful file is NAME_peaks.narrowPeak, a plain-text BED file that lists the genomic coordinates of each peak called, along with various statistics (fold-change, *p*- and *q*-values, etc.).
 
 
 ## Next steps <a name="next"></a>
