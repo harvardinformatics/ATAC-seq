@@ -55,7 +55,7 @@ For ATAC-seq, we recommend **paired-end sequencing**, for several reasons.
 
 ## Compute access / Odyssey <a name="odyssey"></a>
 
-This document assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/), which can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
+This document assumes that you have an account on the [Odyssey computer cluster](https://www.rc.fas.harvard.edu/training/introduction-to-odyssey-online/) of Harvard University.  An account can be requested [here](https://portal.rc.fas.harvard.edu/request/account/new).
 
 Programs, like those listed below (e.g. FastQC, Bowtie2, MACS2), are run on Odyssey by submitting jobs via the [SLURM management system](https://www.rc.fas.harvard.edu/resources/running-jobs/).
 The jobs take the form of shell scripts, which are submitted with the [sbatch command](https://www.rc.fas.harvard.edu/resources/running-jobs/#Submitting_batch_jobs_using_the_sbatch_command).  The shell scripts request computational resources (time, memory, and number of cores) for a job; it is better to request more resources than expected, rather than risk having a job terminated prematurely for exceeding its limits.
@@ -251,7 +251,7 @@ samtools view -h <BAM> | SAMtoBED -i - -o <BED> -x -v
 
 The output from SAMtoBED is a [BED file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) that should be analyzed by MACS2 with `-f BEDPE`.
 
-(Note that the BEDTools program [bamtobed](http://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html) program cannot be used here, since its output is in a nonstandard BED format that MACS2 cannot analyze.)
+(Note that the BEDTools program [bamtobed](http://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html) cannot be used here, since its output is in a nonstandard BED format that MACS2 cannot analyze.)
 
 In deciding among these analysis options, it may help to consider the counts produced by Bowtie2, which indicate how many alignments fall into each category.  For example, if most of the reads are aligned in proper pairs, it may be sufficient to use option #2.  On the other hand, option #3 is preferred if a substantial fraction of the reads consists of singletons.
 
