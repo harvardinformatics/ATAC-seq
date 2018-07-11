@@ -108,9 +108,9 @@ Some things to note when using cutadapt:
 
 #### 2. NGmerge
 
-An alternative approach to adapter removal is provided by NGmerge, which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a parameter for the minimum length of adapter to match (in fact, it does not perform adapter matching at all).  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
+An alternative approach to adapter removal is provided by [NGmerge](https://github.com/harvardinformatics/NGmerge), which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a parameter for the minimum length of adapter to match (in fact, it does not perform adapter matching at all).  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
 
-NGmerge is based on the principle that, with paired-end sequencing, adapter contamination occurs only when both reads fully overlap.  The program tests each pair of reads for overlap, and in cases where they do, it clips the 3' overhangs of both reads (Fig. 2).  Reads that do not overlap remain unaltered.
+NGmerge is based on the principle that, with paired-end sequencing, adapter contamination occurs only when both reads fully overlap.  The program tests each pair of reads for overlap, and in cases where they do, it clips the 3' overhangs of both reads (Fig. 2).  Reads that align without 3' overhangs (or do not align at all) remain unaltered.
 
 <figure>
   <img src="adapter_removal.png" alt="Adapter removal" width="300">
@@ -151,12 +151,14 @@ In order to align reads to a genome, the reference sequence must be indexed.  Th
 
 For many model organisms, the genome and pre-built reference indexes are available from [iGenomes](https://support.illumina.com/sequencing/sequencing_software/igenome.html).  Otherwise, Bowtie2 indexes are made from a FASTA genome file using the program `bowtie2-build`:
 
-    bowtie2-build  <genome.fa>  <genomeIndexName>
-
+```
+module load bowtie2
+bowtie2-build  <genome.fa>  <genomeIndexName>
+```
 
 ### Alignment
 
-Once the indexes are built, the reads can be aligned using Bowtie2.  A brief look at the [manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) reveals the large number of parameters and options available with Bowtie2.  Here are a few that may benefit alignment of an ATAC-seq dataset on Odyssey:
+Once the indexes are built, the reads can be aligned using Bowtie2.  A brief look at the [manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) reveals the large number of parameters and options available with Bowtie2.  Here are a few to consider with ATAC-seq datasets:
 
 <table>
   <tr>
@@ -180,9 +182,13 @@ Once the indexes are built, the reads can be aligned using Bowtie2.  A brief loo
 
 The output is a [SAM file](https://samtools.github.io/hts-specs/SAMv1.pdf), which contains alignment information for each input read.  The SAM can be compressed to a binary format (BAM) and sorted with [SAMtools](http://www.htslib.org/doc/samtools.html).  This is best accomplished by piping the output from Bowtie2 directly to `samtools view` and `samtools sort`, e.g.:
 
-    module load bowtie2
-    module load samtools
-    bowtie2  --very-sensitive  -x <genomeIndexName>  -1 <sample>_1.fastq.gz  -2 <sample>_2.fastq.gz  |  samtools view -u -  |  samtools sort -  > <BAM>
+```
+module load bowtie2   # if not already loaded
+module load samtools
+bowtie2  --very-sensitive  -x <genomeIndexName>  -1 <name>_1.fastq.gz  -2 <name>_2.fastq.gz \
+  |  samtools view -u -  \
+  |  samtools sort -  >  <BAM>
+```
 
 For input files of 20 million paired reads, this command takes around five hours.  This can be decreased by increasing the number of cores in the Bowtie2 command.  For example, one could specify eight cores for Bowtie2 with `-p 8` and adjust the request in the SLURM script to `#SBATCH -n 10` (that is, eight cores for Bowtie2 and one each for SAMtools view and sort).  The memory usage of Bowtie2 depends primarily on the genome length; enough must be requested to load the genome indexes.
 
@@ -197,13 +203,13 @@ It is a well-known problem that ATAC-seq datasets usually contain a large percen
 
 Regardless of your lab protocol, you will have some mitochondrial reads in your sequence data.  Since there are no ATAC-seq peaks of interest in the mitochondrial genome, these reads will only complicate the subsequent steps.  Therefore, we recommend that they be removed from further analysis, via one of the following methods:
 
-1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome index.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
+1. Remove the mitochondrial genome from the reference genome before aligning the reads.  In human/mouse genome builds, the mitochondrial genome is labeled 'chrM'.  That sequence can be deleted from the reference prior to building the genome indexes.  The downside of this approach is that the alignment numbers will look much worse; all of the mitochondrial reads will count as unaligned.
 
 2. Remove the mitochondrial reads after alignment.  A python script, creatively named removeChrom, is available in the ATAC-seq module to accomplish this.  For example, to remove all 'chrM' reads from a BAM file, one would run this:
 
 ```
 module load ATAC-seq samtools   # if not already loaded
-samtools view -h <inBAM>  |  removeChrom - - chrM  |  samtools view -b -  > <outBAM>
+samtools view -h  <inBAM>  |  removeChrom - - chrM  |  samtools view -b -  >  <outBAM>
 ```
 
 #### PCR duplicates
@@ -213,7 +219,7 @@ PCR duplicates are exact copies of DNA fragments that arise during PCR.  Since t
 One commonly used program for removing PCR duplicates is Picard's [MarkDuplicates](http://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates).  It is run as follows:
 
     module load picard
-    java -jar $PICARD_TOOLS_HOME/picard.jar MarkDuplicates  I=<inBAM>  O=<outBAM>  M=dups.txt  REMOVE_DUPLICATES=true
+    java -jar $PICARD_TOOLS_HOME/picard.jar MarkDuplicates I=<inBAM> O=<outBAM> M=dups.txt REMOVE_DUPLICATES=true
 
 The output file specified by `M=` lists counts of alignments analyzed and duplicates identified.
 
