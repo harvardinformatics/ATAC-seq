@@ -108,9 +108,9 @@ Some things to note when using cutadapt:
 
 #### 2. NGmerge
 
-An alternative approach to adapter removal is provided by [NGmerge](https://github.com/harvardinformatics/NGmerge), which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a parameter for the minimum length of adapter to match (in fact, it does not perform adapter matching at all).  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
+An alternative approach to adapter removal is provided by [NGmerge](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2579-2), which was developed in the Informatics Group.  Unlike cutadapt, NGmerge does not require that the adapter sequences be provided, nor does it require a parameter for the minimum length of adapter to match (in fact, it does not perform adapter matching at all).  However, it works only with paired-end sequencing, so those with single-end sequencing should stick with cutadapt.
 
-NGmerge is based on the principle that, with paired-end sequencing, adapter contamination occurs only when both reads fully overlap.  The program tests each pair of reads for overlap, and in cases where they do, it clips the 3' overhangs of both reads (Fig. 2).  Reads that align without 3' overhangs (or do not align at all) remain unaltered.
+NGmerge is based on the principle that, with paired-end sequencing, adapter contamination occurs only when both reads fully overlap.  The program aligns each pair of reads, and in cases where they align with 3' overhangs, it clips the overhangs of both reads (Fig. 2).  Reads that align without 3' overhangs (or do not align at all) remain unaltered.
 
 <figure>
   <img src="adapter_removal.png" alt="Adapter removal" width="300">
@@ -134,7 +134,7 @@ The output files will be `<name>_1.fastq.gz` and `<name>_2.fastq.gz`.  Of the ma
 | `-v`       | Verbose mode                                 |
 
 
-For more information about the parameters and options of NGmerge, please consult the [UserGuide](https://github.com/harvardinformatics/NGmerge/blob/master/UserGuide.pdf) that accompanies the [source code](https://github.com/harvardinformatics/NGmerge) on GitHub.
+For more information about the parameters and options of NGmerge, please consult the [UserGuide](https://github.com/harvardinformatics/NGmerge/blob/master/UserGuide.pdf) or [README](https://github.com/harvardinformatics/NGmerge/blob/master/README.md) that accompanies the [source code](https://github.com/harvardinformatics/NGmerge) on GitHub.
 
 For input files of 20 million paired reads, NGmerge should run in less than one hour on a single core, with minimal memory usage.  Of course, the run-time will decrease with more cores (`-n`).
 
@@ -158,7 +158,7 @@ bowtie2-build  <genome.fa>  <genomeIndexName>
 
 ### Alignment
 
-Once the indexes are built, the reads can be aligned using Bowtie2.  A brief look at the [manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) reveals the large number of parameters and options available with Bowtie2.  Here are a few to consider with ATAC-seq datasets:
+Once the indexes are built, the reads can be aligned using Bowtie2.  A brief look at the [manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) reveals the large number of parameters and options available with Bowtie2.  Here are a few that may benefit alignment of an ATAC-seq dataset on Odyssey:
 
 <table>
   <tr>
@@ -199,7 +199,7 @@ Bowtie2 also provides (via stderr) a summary of the mapping results, including c
 
 #### Mitochondrial reads
 
-It is a well-known problem that ATAC-seq datasets usually contain a large percentage of reads that is derived from mitochondrial DNA (for example, see [this discussion](http://seqanswers.com/forums/showthread.php?t=35318)).  Some have gone as far as [using CRISPR to reduce mitochondrial contamination](https://www.nature.com/articles/s41598-017-02547-w).  The recently published [Omni-ATAC method](https://www.nature.com/articles/nmeth.4396) uses detergents to remove mitochondria and is likely to be more accessible for most researchers (but, do **not** follow their computational workflow).
+It is a well-known problem that ATAC-seq datasets usually contain a large percentage of reads that is derived from mitochondrial DNA (for example, see [this discussion](http://seqanswers.com/forums/showthread.php?t=35318)).  Some have gone as far as [using CRISPR to reduce mitochondrial contamination](https://www.nature.com/articles/s41598-017-02547-w).  The recently published [Omni-ATAC method](https://www.nature.com/articles/nmeth.4396) uses detergents to remove mitochondria and is likely to be more accessible for most researchers (but, [do **not** follow their computational workflow](https://www.biorxiv.org/content/early/2018/12/17/496521)).
 
 Regardless of your lab protocol, you will have some mitochondrial reads in your sequence data.  Since there are no ATAC-seq peaks of interest in the mitochondrial genome, these reads will only complicate the subsequent steps.  Therefore, we recommend that they be removed from further analysis, via one of the following methods:
 
@@ -332,7 +332,7 @@ For ATAC-seq in model organisms, the peak file (NAME_peaks.narrowPeak) can be up
 
     track type=narrowPeak
 
-An alternative visualization tool is the [Integrative Genomics Viewer](http://software.broadinstitute.org/software/igv/) (IGV).  Peak files can be loaded directly (File → Load from File).  Viewing BAM files with IGV requires that they be sorted (by coordinate) and indexed using [SAMtools](http://www.htslib.org/doc/samtools.html).  Note that the BAMs show the read alignments, but not the full fragment lengths as generated by the ATAC and analyzed by MACS2.
+An alternative visualization tool is the [Integrative Genomics Viewer](http://software.broadinstitute.org/software/igv/) (IGV).  Peak files can be loaded directly (File → Load from File).  Viewing BAM files with IGV requires that they be sorted (by coordinate) and indexed using [SAMtools](http://www.htslib.org/doc/samtools.html).  Note that the BAMs show the read alignments, but not the full fragment lengths as generated by the ATAC and analyzed by MACS2 (in `BAMPE` or `BEDPE` mode).
 
 
 ### Comparing peak files
@@ -366,6 +366,10 @@ Buenrostro JD, Giresi PG, Zaba LC, Chang HY, Greenleaf WJ.  Transposition of nat
 Buenrostro JD, Wu B, Chang HY, Greenleaf WJ.  ATAC-seq: A Method for Assaying Chromatin Accessibility Genome-Wide.  Curr Protoc Mol Biol. 2015 Jan 5;109:21.29.1-9.
 
 Corces MR, Trevino AE, Hamilton EG, Greenside PG, Sinnott-Armstrong NA, Vesuna S, Satpathy AT, Rubin AJ, Montine KS, Wu B, Kathiria A, Cho SW, Mumbach MR, Carter AC, Kasowski M, Orloff LA, Risca VI, Kundaje A, Khavari PA, Montine TJ, Greenleaf WJ, Chang HY.  An improved ATAC-seq protocol reduces background and enables interrogation of frozen tissues.  Nat Methods. 2017 Oct;14(10):959-962.
+
+Gaspar JM. Improved peak-calling with MACS2. bioRxiv. 2018 Dec 17. doi: http://dx.doi.org/10.1101/496521
+
+Gaspar JM. NGmerge: merging paired-end reads via novel empirically-derived models of sequencing errors. BMC Bioinformatics. 2018 Dec 20;19(1):536.
 
 Heinz S, Benner C, Spann N, Bertolino E, Lin YC, Laslo P, Cheng JX, Murre C, Singh H, Glass CK.  Simple combinations of lineage-determining transcription factors prime cis-regulatory elements required for macrophage and B cell identities.  Mol Cell. 2010 May 28;38(4):576-89.
 
